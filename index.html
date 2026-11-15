@@ -221,6 +221,21 @@ details.metodo dl{display:grid;grid-template-columns:minmax(110px,max-content) 1
 details.metodo dt{color:var(--texto);font-weight:500}
 details.metodo dd{margin:0}
 @media (max-width:600px){.barra.l{grid-template-columns:24px 92px minmax(0,1fr) 40px}.barra.l .pts{display:none}}
+
+/* modo vídeo (#video): um bloco por tela, ampliado para caber na janela (4:3 das artes = 1440 x 1080), ← → para navegar */
+html.modo-video, html.modo-video body{height:100%;overflow:hidden;background:var(--fundo)}
+html.modo-video .pagina{position:absolute;width:960px;max-width:none;margin:0;padding:36px 44px 28px;transform-origin:0 0;box-sizing:border-box}
+html.modo-video .tabela-wrap[style*="max-height"]{max-height:330px!important}
+html.modo-video [data-slide]:not(.slide-ativo){display:none!important}
+html.modo-video .rodape{display:none}
+html.modo-video .bloco{margin-top:0!important}
+html.modo-video .kpis{margin-top:40px}
+html.modo-video h2{font-size:24px}
+html.modo-video .h2sub{font-size:14px}
+.video-nav{display:none}
+html.modo-video .video-nav{display:flex;position:fixed;right:calc(14px + env(safe-area-inset-right,0px));bottom:calc(12px + env(safe-area-inset-bottom,0px));gap:6px;align-items:center;font:600 12px var(--sans);color:var(--texto-2);opacity:.25;transition:opacity .2s;z-index:20}
+html.modo-video .video-nav:hover{opacity:1}
+.video-nav button{font:inherit;border:1px solid var(--cinza);background:var(--fundo);color:var(--texto);width:30px;height:30px;cursor:pointer}
 </style>
 <style>
 .trilho.dup{display:flex}
@@ -695,6 +710,43 @@ desenhaJogos();
 function redesenha() { desenhaFinal(); desenhaCurva(); }
 redesenha();
 let rt; addEventListener("resize", () => { clearTimeout(rt); rt = setTimeout(redesenha, 120); });
+
+/* modo vídeo: abra a página com #video no fim do endereço */
+(function () {
+  const pag = document.querySelector(".pagina");
+  const slides = [[document.querySelector("header.topo"), document.getElementById("kpis")], ...[...document.querySelectorAll("section.bloco")].map(s => [s])];
+  slides.forEach((els, i) => els.forEach(e => e && e.setAttribute("data-slide", i)));
+  const nav = el("div", {class: "video-nav"}), ant = el("button", {type: "button", "aria-label": "Bloco anterior"}, "←"),
+        prox = el("button", {type: "button", "aria-label": "Próximo bloco"}, "→"), cont = el("span");
+  nav.append(ant, cont, prox); document.body.append(nav);
+  let atual = 0;
+  function encaixa() {
+    if (!document.documentElement.classList.contains("modo-video")) { pag.style.transform = pag.style.left = pag.style.top = ""; return; }
+    pag.style.transform = "none";
+    const h = pag.scrollHeight, vw = innerWidth, vh = innerHeight, s = Math.min(vw / 960, vh / Math.max(h, 600));
+    pag.style.transform = `scale(${s})`; pag.style.left = (vw - 960 * s) / 2 + "px"; pag.style.top = Math.max(0, (vh - h * s) / 2) + "px";
+  }
+  function mostra(i) {
+    atual = (i + slides.length) % slides.length;
+    document.querySelectorAll("[data-slide]").forEach(e => e.classList.toggle("slide-ativo", +e.getAttribute("data-slide") === atual));
+    cont.textContent = `${atual + 1}/${slides.length}`;
+    dispatchEvent(new Event("resize")); setTimeout(encaixa, 160);
+  }
+  function aplica() {
+    const on = location.hash === "#video";
+    document.documentElement.classList.toggle("modo-video", on);
+    if (on) mostra(atual); else { document.querySelectorAll(".slide-ativo").forEach(e => e.classList.remove("slide-ativo")); dispatchEvent(new Event("resize")); encaixa(); }
+  }
+  ant.onclick = () => mostra(atual - 1); prox.onclick = () => mostra(atual + 1);
+  addEventListener("keydown", ev => {
+    if (!document.documentElement.classList.contains("modo-video") || ev.target.closest("input,select,textarea,[role=listbox]")) return;
+    if (["ArrowRight", "PageDown", " "].includes(ev.key)) { ev.preventDefault(); mostra(atual + 1); }
+    else if (["ArrowLeft", "PageUp"].includes(ev.key)) { ev.preventDefault(); mostra(atual - 1); }
+  });
+  addEventListener("resize", () => setTimeout(encaixa, 150));
+  addEventListener("hashchange", aplica);
+  aplica();
+})();
 </script>
 </body>
 </html>
