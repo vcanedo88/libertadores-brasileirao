@@ -333,8 +333,10 @@ html.modo-video .video-nav:hover{opacity:1}
     <h2>Rodada a rodada</h2>
     <p class="h2sub">Chance de Libertadores (grupos + pré) em cada simulação desde 07/11, sempre com o mesmo modelo. * rodada em andamento.</p>
     <div class="tabela-wrap"><table class="ranking evo" id="tabEvo"></table></div>
-    <div class="tabela-wrap" style="margin-top:14px"><table class="ranking evo" id="tabEvoG"></table></div>
-    <p class="nota"><b>Var.</b>: variação desde a coluna anterior, em pontos percentuais. Passe o mouse no número para ver grupos e pré. <b>7º, 8º e 9º vai</b>: chance de essa posição ter vaga (o 6º já tem). A coluna de 07/11 foi refeita só fora do Brasileirão: com o Vasco já eliminado da Copa do Brasil (o vídeo ainda contava a chance de ele ser campeão) e com as finais pelo mercado, para a variação mostrar só o efeito dos jogos do Brasileirão. † final decidida desde a coluna anterior (Sula em 21/11, Libertadores em 28/11): parte da variação vem dela.</p>
+    <h3 class="met-h3">Qual será o tamanho do G?</h3>
+    <p class="h2sub">Chance de cada tamanho de G, nas mesmas simulações.</p>
+    <div class="tabela-wrap"><table class="ranking evo" id="tabEvoG"></table></div>
+    <p class="nota"><b>Var.</b>: variação desde a coluna anterior, em pontos percentuais. Passe o mouse no número para ver grupos e pré. <b>Só G6</b>: nenhuma vaga extra chega à tabela (o G6 já está garantido). A coluna de 07/11 foi refeita só fora do Brasileirão: com o Vasco já eliminado da Copa do Brasil (o vídeo ainda contava a chance de ele ser campeão) e com as finais pelo mercado, para a variação mostrar só o efeito dos jogos do Brasileirão. † final decidida desde a coluna anterior (Sula em 21/11, Libertadores em 28/11): parte da variação vem dela.</p>
   </section>
 
   <section class="bloco" style="margin-top:48px">
@@ -562,9 +564,8 @@ function evolucao(id, linhas, valor, rotLinha, tip) {
 { const CGx = Object.fromEntries(DADOS.clubes.map(r => [r.clube, r]));
   const L = DADOS.tabela.filter(r => r.pode_lib && r.lib > 0 && r.clube !== "Grêmio" && !(CGx[r.clube] && CGx[r.clube].grupos_garantido)).sort((a, b) => b.lib - a.lib);
   evolucao("tabEvo", L, (e, c) => e.lib[c], r => clube(r.clube), (e, c) => `grupos ${pc(e.grupos[c] ?? 0)} · pré ${pc(e.pre[c] ?? 0)}`);
-  // até onde a tabela dá vaga: chance de o G chegar pelo menos até cada posição (o 6º já é garantido)
-  const ate = (e, k) => Object.entries(e.tamanho_g).filter(([g]) => +g >= k).reduce((s, [, v]) => s + v, 0);
-  evolucao("tabEvoG", [7, 8, 9].map(k => ({clube: k, P: ""})), (e, k) => ate(e, k), r => el("b", {}, `${r.clube}º vai`)); }
+  // tamanho exato do G em cada coluna; o G6 é o mínimo garantido, então a linha dele é "só G6"
+  evolucao("tabEvoG", ["6", "7", "8", "9"].map(g => ({clube: g, P: ""})), (e, g) => e.tamanho_g[g] || 0, r => el("b", {}, (r.clube === "6" ? "Só G" : "G") + r.clube)); }
 
 /* chance */
 const CL = DADOS.clubes.filter(r => r.lib >= 0.5).sort((a, b) => b.lib - a.lib);
