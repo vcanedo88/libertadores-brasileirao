@@ -290,6 +290,7 @@ html.modo-video .video-nav:hover{opacity:1}
 #tabLib td.pos{font-weight:700;color:var(--texto-2)}
 .gremio-box{display:flex;gap:14px;align-items:flex-start;margin-top:18px;padding:14px 16px;border-left:4px solid var(--roxo);background:var(--s1)}
 .gremio-box img{width:44px;height:44px;object-fit:contain;flex:none}
+.grupos-l{font-size:15px;margin:16px 0 0}
 .gremio-box h3{margin:0 0 4px;font-size:16px}
 .gremio-box p{margin:0;font-size:14px}
 .gremio-box b{color:var(--roxo);font-size:18px}
@@ -360,23 +361,15 @@ html.modo-video .video-nav:hover{opacity:1}
     <div class="prem" id="premissas"></div>
     <div class="cen" id="cenarios" style="margin-top:18px"></div>
     <div class="leg"><span><i class="g6"></i>G6</span><span><i class="g7"></i>G7</span><span><i class="g8"></i>G8</span><span><i class="g9"></i>G9</span></div>
+    <p class="grupos-l" id="gruposPos"></p>
     <p class="nota">A final da Copa do Brasil não muda o G: o Palmeiras já está no G4 e o Grêmio vai como campeão ou vice. Se o Grêmio cair, a vaga volta à tabela.</p>
   </section>
 
   <section class="bloco">
-    <div class="duas">
-      <div>
-        <h2>Quantos pontos bastam</h2>
-        <p class="h2sub">Chance de ir à Libertadores pela tabela de quem termina com cada pontuação, separada em fase de grupos e pré.</p>
-        <div class="relativo" id="curva"></div>
-        <div class="leg"><span><i style="background:var(--roxo)"></i>fase de grupos</span><span><i style="background:var(--s3)"></i>pré-Libertadores</span></div>
-      </div>
-      <div>
-        <h2>Até que posição vai</h2>
-        <p class="h2sub">% dos cenários em que a posição dá vaga pela tabela. <b style="color:var(--roxo)">Roxo</b>: fase de grupos · <b style="color:var(--s4)">lilás</b>: pré. Campeão da Sula vai de qualquer posição, sem ocupar vaga da tabela.</p>
-        <div id="posicao"></div>
-      </div>
-    </div>
+    <h2>Quantos pontos bastam</h2>
+    <p class="h2sub">Chance de ir à Libertadores pela tabela de quem termina com cada pontuação, separada em fase de grupos e pré.</p>
+    <div class="relativo" id="curva"></div>
+    <div class="leg"><span><i style="background:var(--roxo)"></i>fase de grupos</span><span><i style="background:var(--s3)"></i>pré-Libertadores</span></div>
   </section>
 
   <section class="bloco">
@@ -655,11 +648,11 @@ function desenhaCurva() {
   box.append(svg);
 }
 
-/* posição */
-document.getElementById("posicao").replaceChildren(...Object.entries(DADOS.posicao_fase).filter(([k, v]) => v.vaga > 0).map(([k, v]) =>
-  el("div", {class: "pos-l"}, el("b", {style: "text-align:left"}, k + "º"),
-    el("div", {class: "trilho dup", title: `grupos ${pc(v.grupos)} · pré ${pc(v.vaga - v.grupos)}`}, el("i", {class: "g", style: `width:${v.grupos}%`}), el("i", {class: "p", style: `width:${v.vaga - v.grupos}%`})),
-    el("b", {}, v.vaga >= 99.95 ? "sempre" : v.vaga === 0 ? "nunca" : pc(v.vaga)))));
+/* fase de grupos direto: até que posição vai (a vaga total por posição é o próprio tamanho do G) */
+{ const pf = Object.entries(DADOS.posicao_fase).filter(([k, v]) => v.grupos >= 0.5 && v.grupos < 99.95);
+  const box = document.getElementById("gruposPos");
+  if (pf.length) box.append(el("b", {}, "Fase de grupos direto pela tabela: "), ...pf.flatMap(([k, v], i) => [i ? (i === pf.length - 1 ? " e " : ", ") : "", el("b", {}, k + "º"), ` em ${pc(v.grupos)}`]), " dos cenários. Do 1º ao 4º, sempre; o resto vai para a pré.");
+  else box.remove(); }
 
 /* quanto precisa */
 const PREC = DADOS.clubes.filter(r => !r.garantido && r.lib > 0.5 && r.clube !== "Grêmio");
